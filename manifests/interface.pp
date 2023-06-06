@@ -513,40 +513,40 @@ define network::interface (
 
   include ::network
 
-  validate_re($ensure, '^(present|absent)$', "Ensure can only be present or absent (to add or remove an interface). Current value: ${ensure}")
-  validate_bool($auto)
-  validate_bool($enable)
-  validate_bool($restart_all_nic)
+  #validate_re($ensure, '^(present|absent)$', "Ensure can only be present or absent (to add or remove an interface). Current value: ${ensure}")
+  #validate_bool($auto)
+  #validate_bool($enable)
+  #validate_bool($restart_all_nic)
 
-  validate_array($up)
-  validate_array($pre_up)
-  validate_array($down)
-  validate_array($pre_down)
-  validate_array($slaves)
-  validate_array($bond_slaves)
-  validate_array($bridge_ports)
-  validate_array($wpa_key_mgmt)
-  validate_array($wpa_group)
-  validate_array($wpa_pairwise)
-  validate_array($wpa_auth_alg)
-  validate_array($wpa_proto)
+  #validate_array($up)
+  #validate_array($pre_up)
+  #validate_array($down)
+  #validate_array($pre_down)
+  #validate_array($slaves)
+  #validate_array($bond_slaves)
+  #validate_array($bridge_ports)
+  #validate_array($wpa_key_mgmt)
+  #validate_array($wpa_group)
+  #validate_array($wpa_pairwise)
+  #validate_array($wpa_auth_alg)
+  #validate_array($wpa_proto)
 
   # $subchannels is only valid for zLinux/SystemZ/s390x.
-  if $::architecture == 's390x' {
-    validate_array($subchannels)
-    validate_re($nettype, '^(qeth|lcs|ctc)$', "${name}::\$nettype may be 'qeth', 'lcs' or 'ctc' only and is set to <${nettype}>.")
-    # Different parameters required for RHEL6 and RHEL7
-    if $::operatingsystemmajrelease =~ /^7|^8/ {
-      validate_string($zlinux_options)
-    } else {
-      validate_re($layer2, '^0|1$', "${name}::\$layer2 must be 1 or 0 and is to <${layer2}>.")
-    }
-  }
-  if $::osfamily == 'RedHat' {
-    if $iprule != undef {
-      validate_array($iprule)
-    }
-  }
+  #if $::architecture == 's390x' {
+  #  validate_array($subchannels)
+  #  validate_re($nettype, '^(qeth|lcs|ctc)$', "${name}::\$nettype may be 'qeth', 'lcs' or 'ctc' only and is set to <${nettype}>.")
+  #  # Different parameters required for RHEL6 and RHEL7
+  #  if $::operatingsystemmajrelease =~ /^7|^8/ {
+  #    validate_string($zlinux_options)
+  #  } else {
+  #    validate_re($layer2, '^0|1$', "${name}::\$layer2 must be 1 or 0 and is to <${layer2}>.")
+  #  }
+  #}
+  #if $::osfamily == 'RedHat' {
+  #  if $iprule != undef {
+  #    validate_array($iprule)
+  #  }
+  #}
   if $arp != undef and ! ($arp in ['yes', 'no']) {
     fail('arp must be one of: undef, yes, no')
   }
