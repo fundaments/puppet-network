@@ -83,7 +83,7 @@ define network::mroute (
   $table               = undef,
 ) {
   # Validate our arrays
-  validate_hash($routes)
+  #validate_hash($routes)
 
   include ::network
   $real_reload_command = $reload_command ? {
