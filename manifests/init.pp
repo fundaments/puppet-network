@@ -92,7 +92,7 @@ class network (
   $tables_hash               = undef,
   $confs_hash                = undef,
 
-  $hostname_file_template   = "network/hostname-${::osfamily}.erb",
+  $hostname_file_template   = "network/hostname-${facts['os']['family']}.erb",
 
   # Parameter used only on RedHat family
   $gateway                   = undef,
@@ -226,7 +226,7 @@ class network (
     default         => $config_file_require,
   }
 
-  $manage_hostname = pick($hostname, $::fqdn)
+  $manage_hostname = pick($hostname, $facts['networking']['fqdn'])
 
   if $package_ensure == 'absent' {
     $config_dir_ensure = absent
@@ -343,7 +343,7 @@ class network (
     create_resources('network::conf', $real_confs_hash)
   }
   # Configure default gateway (On RedHat). Also hostname is set.
-  if $::osfamily == 'RedHat'
+  if $facts['os']['family'] == 'RedHat'
   and ($::network::gateway
   or $::network::hostname) {
     file { '/etc/sysconfig/network':
@@ -354,7 +354,7 @@ class network (
       content => template($network::hostname_file_template),
       notify  => $network::manage_config_file_notify,
     }
-    case $::lsbmajdistrelease {
+    case $facts['os']['distro']['release']['major'] {
       '7','8': {
         exec { 'sethostname':
           command => "/usr/bin/hostnamectl set-hostname ${manage_hostname}",
@@ -366,7 +366,7 @@ class network (
   }
 
   # Configure hostname (On Debian)
-  if $::osfamily == 'Debian'
+  if $facts['os']['family'] == 'Debian'
   and $hostname {
     file { '/etc/hostname':
       ensure  => $config_file_ensure,
@@ -378,7 +378,7 @@ class network (
     }
   }
 
-  if $::osfamily == 'Suse' {
+  if $facts['os']['family'] == 'Suse' {
     if $hostname {
       file { '/etc/HOSTNAME':
         ensure  => $config_file_ensure,
@@ -395,7 +395,7 @@ class network (
     }
   }
 
-  if $::osfamily == 'Solaris' {
+  if $facts['os']['family'] == 'Solaris' {
     if $hostname {
       file { '/etc/nodename':
         ensure  => $config_file_ensure,

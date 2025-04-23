@@ -272,14 +272,14 @@ define network::interface (
 
   $enable                = true,
   $ensure                = 'present',
-  $template              = "network/interface/${::osfamily}.erb",
+  $template              = "network/interface/${facts['os']['family']}.erb",
   $options               = undef,
   $options_extra_redhat  = undef,
   $options_extra_debian  = undef,
   $options_extra_suse    = undef,
   $interface             = $name,
-  $restart_all_nic = $::osfamily ? {
-    'RedHat' => $::operatingsystemmajrelease ? {
+  $restart_all_nic = $facts['os']['family'] ? {
+    'RedHat' => $facts['os']['release']['major'] ? {
       '8'     => false,
       default => true,
     },
@@ -567,7 +567,7 @@ define network::interface (
     fail('send_gratuitous_arp must be one of: undef, yes, no')
   }
 
-  if $::osfamily != 'RedHat' and ($type == 'InfiniBand' or $connected_mode) {
+  if $facts['os']['family'] != 'RedHat' and ($type == 'InfiniBand' or $connected_mode) {
     fail('InfiniBand parameters are supported only for RedHat family.')
   }
 
@@ -614,7 +614,7 @@ define network::interface (
   }
 
   # Redhat and Suse specific
-  if $::operatingsystem == 'SLES' and versioncmp($::operatingsystemrelease, '12') >= 0 {
+  if $facts['os']['name'] == 'SLES' and versioncmp($facts['os']['release']['full'], '12') >= 0 {
     $bootproto_false = 'static'
   } else {
     $bootproto_false = 'none'
@@ -680,9 +680,9 @@ define network::interface (
 
   # Resources
   $real_reload_command = $reload_command ? {
-    undef => $::operatingsystem ? {
+    undef => $facts['os']['name'] ? {
         'CumulusLinux' => 'ifreload -a',
-        'RedHat'       => $::operatingsystemmajrelease ? {
+        'RedHat'       => $facts['os']['release']['major'] ? {
           '8'     => "/usr/bin/nmcli con reload ; /usr/bin/nmcli device reapply ${interface}",
           default => "ifdown ${interface} --force ; ifup ${interface}",
         },
@@ -701,11 +701,11 @@ define network::interface (
     $network_notify = $network::manage_config_file_notify
   }
 
-  case $::osfamily {
+  case $facts['os']['family'] {
 
     'Debian': {
       if $vlan_raw_device {
-        if versioncmp('9.0', $::operatingsystemrelease) >= 0
+        if versioncmp('9.0', $facts['os']['release']['full']) >= 0
         and !defined(Package['vlan']) {
           package { 'vlan':
             ensure => 'present',
@@ -722,7 +722,7 @@ define network::interface (
             group  => 'root',
           }
         }
-        if $::operatingsystem == 'CumulusLinux' {
+        if $facts['os']['name'] == 'CumulusLinux' {
           file { "interface-${name}":
             ensure  => $ensure,
             path    => "/etc/network/interfaces.d/${name}",
@@ -784,7 +784,7 @@ define network::interface (
     }
 
     'RedHat': {
-      if versioncmp($::operatingsystemmajrelease, '8') >= 0 {
+      if versioncmp($facts['os']['release']['major'], '8') >= 0 {
         if ! defined(Service['NetworkManager']) {
           service { 'NetworkManager':
             ensure => running,
@@ -833,7 +833,7 @@ define network::interface (
     }
 
     'Solaris': {
-      if $::operatingsystemrelease == '5.11' {
+      if $facts['os']['release']['full'] == '5.11' {
         if ! defined(Service['svc:/network/physical:nwam']) {
           service { 'svc:/network/physical:nwam':
             ensure => stopped,
@@ -846,7 +846,7 @@ define network::interface (
           }
         }
       }
-      case $::operatingsystemmajrelease {
+      case $facts['os']['release']['major'] {
         '11','5': {
           if $enable_dhcp {
             $create_ip_command = "ipadm create-addr -T dhcp ${title}/dhcp"
@@ -874,10 +874,10 @@ define network::interface (
         require => Exec["create ipaddr ${title}"],
         tag     => 'solaris',
       }
-      host { $::fqdn:
+      host { $facts['networking']['fqdn']:
         ensure       => present,
         ip           => $ipaddress,
-        host_aliases => [$::hostname],
+        host_aliases => [$facts['networking']['hostname']],
         require      => File["hostname iface ${title}"],
       }
       if ! defined(Service['svc:/network/physical:default']) {
@@ -893,7 +893,7 @@ define network::interface (
     }
 
     default: {
-      alert("${::operatingsystem} not supported. No changes done here.")
+      alert("${facts['os']['name']} not supported. No changes done here.")
     }
 
   }
